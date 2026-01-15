@@ -1,12 +1,12 @@
 <!--
-  Mobile “app-like” prototype:
-  - Full-height app shell that adapts to mobile browser chrome (100dvh)
-  - Bottom tab bar (fixed) with safe-area support (iPhone home indicator)
-  - Tap tabs to swap main content
+  Updated: iOS Safari “less slippery” scroll behavior
+  Key change:
+  - Lock page/document scrolling (body overflow hidden)
+  - Make .app fixed to viewport
+  - Make ONLY <main> scrollable
+  This keeps the topbar visually pinned in Safari, more like Chrome.
 
-  How to run:
-  1) Save as: index.html
-  2) Open on your phone (Safari/Chrome) or in desktop responsive mode.
+  Keep your other PWA files as-is.
 -->
 <!doctype html>
 <html lang="en">
@@ -18,13 +18,19 @@
     />
     <title>Mobile Web App Shell Prototype</title>
 
-    <!-- Optional: PWA-ish polish (not required for the prototype) -->
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Mock App" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <link rel="icon" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
 
     <style>
       :root {
-        --tabbar-height: 72px; /* includes space for icons + labels */
+        --tabbar-height: 72px;
         --border: rgba(0, 0, 0, 0.12);
         --bg: #ffffff;
         --tab-active: #66a3ff;
@@ -33,34 +39,39 @@
       }
 
       * { box-sizing: border-box; }
-      html, body { height: 100%; }
-      body {
+
+      html, body {
+        height: 100%;
         margin: 0;
+      }
+
+      /* ✅ IMPORTANT: prevent the document/page from scrolling (reduces iOS Safari “whole page slides”) */
+      body {
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
         color: var(--text);
         background: #f7f7f7;
-        /* Prevent “rubber band” overscroll from feeling too browser-y (optional) */
+
+        overflow: hidden;          /* key */
         overscroll-behavior-y: none;
+        -webkit-text-size-adjust: 100%;
       }
 
-      /* App container: dynamic viewport height handles mobile address bar expand/collapse better */
+      /* ✅ App shell is fixed to viewport; only <main> scrolls */
       .app {
-        height: 100dvh;
+        position: fixed;
+        inset: 0;
         display: flex;
         flex-direction: column;
         background: var(--bg);
-
-        /* Safe-area padding for iOS notch (top) */
         padding-top: env(safe-area-inset-top);
       }
 
+      /* ✅ Make the header truly pinned */
       .topbar {
         flex: 0 0 auto;
         padding: 14px 16px;
         border-bottom: 1px solid var(--border);
         background: var(--bg);
-        position: sticky; /* stays visible while main scrolls */
-        top: 0;
         z-index: 2;
       }
 
@@ -69,14 +80,14 @@
         font-size: 16px;
       }
 
-      /* Main content area is scrollable; pad bottom so it never hides under the tab bar */
+      /* ✅ Scroll ONLY the main content area */
       main {
         flex: 1 1 auto;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
         padding: 18px 16px;
 
-        /* Reserve space for fixed tab bar + iOS home indicator */
+        /* reserve space so content never hides under tabbar + home indicator */
         padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
       }
 
@@ -104,19 +115,16 @@
         font-size: 18px;
       }
 
-      /* Fixed bottom tab bar */
+      /* Bottom tab bar stays fixed */
       .tabbar {
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
-
         height: var(--tabbar-height);
         padding-bottom: env(safe-area-inset-bottom);
-
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-
         background: var(--bg);
         border-top: 1px solid var(--border);
         z-index: 3;
@@ -145,10 +153,7 @@
         line-height: 1;
       }
 
-      /* Simple “page” transitions */
-      .page {
-        display: none;
-      }
+      .page { display: none; }
       .page[data-active="true"] {
         display: block;
         animation: fadeIn 140ms ease-out;
@@ -158,7 +163,6 @@
         to { opacity: 1; transform: translateY(0); }
       }
 
-      /* Debug helpers (optional) */
       .hint {
         margin-top: 14px;
         color: var(--muted);
@@ -166,7 +170,6 @@
         line-height: 1.35;
       }
 
-      /* Optional: nicer focus for keyboard testing */
       .tab:focus-visible {
         outline: 3px solid rgba(102, 163, 255, 0.6);
         outline-offset: -3px;
@@ -181,7 +184,6 @@
       </header>
 
       <main>
-        <!-- Pages -->
         <section class="page" id="page-game" data-route="game" data-active="true">
           <div class="card big-center">
             <div>
@@ -191,18 +193,18 @@
           </div>
 
           <div class="hint">
-            Try this on a phone: scroll a bit and notice the browser chrome (address bar) typically
-            collapses. The layout uses <code>100dvh</code> + safe-area padding so the bottom tabs stay
-            pinned and don’t overlap the home indicator.
+            Safari tip: with body scroll locked and main scrolling, the header should feel pinned
+            and less “slippery” vs the whole page sliding.
           </div>
 
           <div class="card" style="margin-top: 14px;">
             <p style="margin: 0 0 10px;">
-              Extra scroll content (to trigger browser chrome collapse):
+              Extra scroll content (to test scroll feel):
             </p>
             <ul style="margin: 0; padding-left: 18px;">
               <li>Item A</li><li>Item B</li><li>Item C</li><li>Item D</li><li>Item E</li>
               <li>Item F</li><li>Item G</li><li>Item H</li><li>Item I</li><li>Item J</li>
+              <li>Item K</li><li>Item L</li><li>Item M</li><li>Item N</li><li>Item O</li>
             </ul>
           </div>
         </section>
@@ -247,7 +249,6 @@
         </section>
       </main>
 
-      <!-- Tab Bar -->
       <nav class="tabbar" role="tablist" aria-label="Bottom Tabs">
         <button class="tab" role="tab" aria-selected="true" data-target="game">
           <div class="label">Game</div>
@@ -268,45 +269,33 @@
         const pages = Array.from(document.querySelectorAll(".page"));
 
         function setActive(route, { pushState = true } = {}) {
-          // Update pages
           pages.forEach((p) => {
             const active = p.dataset.route === route;
             p.dataset.active = active ? "true" : "false";
           });
 
-          // Update tabs
           tabs.forEach((t) => {
             const active = t.dataset.target === route;
             t.setAttribute("aria-selected", active ? "true" : "false");
           });
 
-          // Update title
           titleEl.textContent = route.charAt(0).toUpperCase() + route.slice(1);
 
-          // Update URL hash (handy for quick “routing”)
-          if (pushState) {
-            history.replaceState({ route }, "", "#" + route);
-          }
+          if (pushState) history.replaceState({ route }, "", "#" + route);
         }
 
-        // Tab click handling
-        tabs.forEach((tab) => {
-          tab.addEventListener("click", () => {
-            setActive(tab.dataset.target);
-          });
-        });
+        tabs.forEach((tab) =>
+          tab.addEventListener("click", () => setActive(tab.dataset.target))
+        );
 
-        // Restore from hash on load (e.g., open #players)
         const initial = (location.hash || "#game").replace("#", "");
         setActive(initial, { pushState: false });
 
-        // Handle back/forward (hash changes)
         window.addEventListener("hashchange", () => {
           const route = (location.hash || "#game").replace("#", "");
           setActive(route, { pushState: false });
         });
 
-        // Small settings demo interaction
         const toggle = document.getElementById("toggle");
         const status = document.getElementById("toggleStatus");
         if (toggle && status) {
@@ -315,6 +304,15 @@
           });
         }
       })();
+
+      // PWA: register service worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch((err) => {
+            console.warn("Service worker registration failed:", err);
+          });
+        });
+      }
     </script>
   </body>
 </html>
