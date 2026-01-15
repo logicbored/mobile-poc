@@ -1,0 +1,320 @@
+<!--
+  Mobile “app-like” prototype:
+  - Full-height app shell that adapts to mobile browser chrome (100dvh)
+  - Bottom tab bar (fixed) with safe-area support (iPhone home indicator)
+  - Tap tabs to swap main content
+
+  How to run:
+  1) Save as: index.html
+  2) Open on your phone (Safari/Chrome) or in desktop responsive mode.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Mobile Web App Shell Prototype</title>
+
+    <!-- Optional: PWA-ish polish (not required for the prototype) -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <style>
+      :root {
+        --tabbar-height: 72px; /* includes space for icons + labels */
+        --border: rgba(0, 0, 0, 0.12);
+        --bg: #ffffff;
+        --tab-active: #66a3ff;
+        --text: #111;
+        --muted: rgba(0, 0, 0, 0.6);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background: #f7f7f7;
+        /* Prevent “rubber band” overscroll from feeling too browser-y (optional) */
+        overscroll-behavior-y: none;
+      }
+
+      /* App container: dynamic viewport height handles mobile address bar expand/collapse better */
+      .app {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+
+        /* Safe-area padding for iOS notch (top) */
+        padding-top: env(safe-area-inset-top);
+      }
+
+      .topbar {
+        flex: 0 0 auto;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+        position: sticky; /* stays visible while main scrolls */
+        top: 0;
+        z-index: 2;
+      }
+
+      .topbar .title {
+        font-weight: 650;
+        font-size: 16px;
+      }
+
+      /* Main content area is scrollable; pad bottom so it never hides under the tab bar */
+      main {
+        flex: 1 1 auto;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 18px 16px;
+
+        /* Reserve space for fixed tab bar + iOS home indicator */
+        padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        background: #fff;
+      }
+
+      .big-center {
+        min-height: 55vh;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .big-center h1 {
+        margin: 0 0 8px;
+        font-size: 36px;
+        letter-spacing: -0.02em;
+      }
+      .big-center p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      /* Fixed bottom tab bar */
+      .tabbar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        height: var(--tabbar-height);
+        padding-bottom: env(safe-area-inset-bottom);
+
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        z-index: 3;
+      }
+
+      .tab {
+        appearance: none;
+        border: 0;
+        background: transparent;
+        padding: 10px 8px 12px;
+        display: grid;
+        place-items: center;
+        gap: 6px;
+        font: inherit;
+        color: var(--muted);
+        cursor: pointer;
+      }
+
+      .tab[aria-selected="true"] {
+        background: var(--tab-active);
+        color: #000;
+      }
+
+      .tab .label {
+        font-size: 14px;
+        line-height: 1;
+      }
+
+      /* Simple “page” transitions */
+      .page {
+        display: none;
+      }
+      .page[data-active="true"] {
+        display: block;
+        animation: fadeIn 140ms ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0.4; transform: translateY(2px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Debug helpers (optional) */
+      .hint {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      /* Optional: nicer focus for keyboard testing */
+      .tab:focus-visible {
+        outline: 3px solid rgba(102, 163, 255, 0.6);
+        outline-offset: -3px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <div class="title" id="topbarTitle">Game</div>
+      </header>
+
+      <main>
+        <!-- Pages -->
+        <section class="page" id="page-game" data-route="game" data-active="true">
+          <div class="card big-center">
+            <div>
+              <h1>Game</h1>
+              <p>(content area)</p>
+            </div>
+          </div>
+
+          <div class="hint">
+            Try this on a phone: scroll a bit and notice the browser chrome (address bar) typically
+            collapses. The layout uses <code>100dvh</code> + safe-area padding so the bottom tabs stay
+            pinned and don’t overlap the home indicator.
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <p style="margin: 0 0 10px;">
+              Extra scroll content (to trigger browser chrome collapse):
+            </p>
+            <ul style="margin: 0; padding-left: 18px;">
+              <li>Item A</li><li>Item B</li><li>Item C</li><li>Item D</li><li>Item E</li>
+              <li>Item F</li><li>Item G</li><li>Item H</li><li>Item I</li><li>Item J</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="page" id="page-players" data-route="players">
+          <div class="card big-center">
+            <div>
+              <h1>Players</h1>
+              <p>(content area)</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <p style="margin: 0 0 10px;">Mock list</p>
+            <ol style="margin: 0; padding-left: 18px;">
+              <li>Player One</li>
+              <li>Player Two</li>
+              <li>Player Three</li>
+              <li>Player Four</li>
+            </ol>
+          </div>
+        </section>
+
+        <section class="page" id="page-settings" data-route="settings">
+          <div class="card big-center">
+            <div>
+              <h1>Settings</h1>
+              <p>(content area)</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <label style="display:block; margin-bottom: 10px;">
+              <span style="display:block; margin-bottom: 6px; color: var(--muted);">Example toggle</span>
+              <input type="checkbox" id="toggle" />
+              <span>Enable something</span>
+            </label>
+            <div id="toggleStatus" style="color: var(--muted); font-size: 13px;">
+              Disabled
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Tab Bar -->
+      <nav class="tabbar" role="tablist" aria-label="Bottom Tabs">
+        <button class="tab" role="tab" aria-selected="true" data-target="game">
+          <div class="label">Game</div>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" data-target="players">
+          <div class="label">Players</div>
+        </button>
+        <button class="tab" role="tab" aria-selected="false" data-target="settings">
+          <div class="label">Settings</div>
+        </button>
+      </nav>
+    </div>
+
+    <script>
+      (function () {
+        const titleEl = document.getElementById("topbarTitle");
+        const tabs = Array.from(document.querySelectorAll(".tabbar .tab"));
+        const pages = Array.from(document.querySelectorAll(".page"));
+
+        function setActive(route, { pushState = true } = {}) {
+          // Update pages
+          pages.forEach((p) => {
+            const active = p.dataset.route === route;
+            p.dataset.active = active ? "true" : "false";
+          });
+
+          // Update tabs
+          tabs.forEach((t) => {
+            const active = t.dataset.target === route;
+            t.setAttribute("aria-selected", active ? "true" : "false");
+          });
+
+          // Update title
+          titleEl.textContent = route.charAt(0).toUpperCase() + route.slice(1);
+
+          // Update URL hash (handy for quick “routing”)
+          if (pushState) {
+            history.replaceState({ route }, "", "#" + route);
+          }
+        }
+
+        // Tab click handling
+        tabs.forEach((tab) => {
+          tab.addEventListener("click", () => {
+            setActive(tab.dataset.target);
+          });
+        });
+
+        // Restore from hash on load (e.g., open #players)
+        const initial = (location.hash || "#game").replace("#", "");
+        setActive(initial, { pushState: false });
+
+        // Handle back/forward (hash changes)
+        window.addEventListener("hashchange", () => {
+          const route = (location.hash || "#game").replace("#", "");
+          setActive(route, { pushState: false });
+        });
+
+        // Small settings demo interaction
+        const toggle = document.getElementById("toggle");
+        const status = document.getElementById("toggleStatus");
+        if (toggle && status) {
+          toggle.addEventListener("change", () => {
+            status.textContent = toggle.checked ? "Enabled" : "Disabled";
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
